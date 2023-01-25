@@ -19,6 +19,15 @@ Content-Type: application/json
   "number": "1"
 }
 
+###
+PUT http://localhost:3001/api/persons/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "Arto Hellas",
+  "number": "1"
+}
 
 ### 
 DELETE http://localhost:3001/api/persons/3

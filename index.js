@@ -86,10 +86,13 @@ app.post(`${url}/persons`,(request,response) => {
     }
     else {
 
+        let newPersonId = isNullOrEmpty(id) || id === 0 ? 
+           Math.floor(Math.random() * Date.now()) : id
+
         let newPerson = {
                 ...body , 
-                id: Math.floor(Math.random() * Date.now())
-            }
+                id:  newPersonId
+        }
 
         personsData = personsData.concat(newPerson)
         return response.json(personsData)
@@ -107,9 +110,9 @@ app.delete(`${url}/persons/:id`,(request,response) => {
 
         if(person){
 
-           
+           let updatedPersonsData = personsData.filter(p => p.id !== id)
 
-            personsData = personsData.filter(p => p.id !== id)
+            personsData = updatedPersonsData
 
             response.send(`${person.name} deleted`)
         }
@@ -119,6 +122,28 @@ app.delete(`${url}/persons/:id`,(request,response) => {
 
 })
 
+
+/// update person
+app.put(`${url}/persons/:id`, (request,response)=>{
+         let body = request.body
+
+        let {id , name , number } = body
+
+        let person = personsData.find(p => p.id === id)
+
+        if(person){
+
+            let updatedPersonsData = personsData.map(p => p.id === id ? {id: id, name : name , number} : p)
+
+            console.log(updatedPersonsData)
+            personsData = updatedPersonsData
+
+            response.send(`${person.name} updated`)
+        }
+        else{
+            response.status(404).end("User not found")
+        }
+})
 
 
 app.get('/info',(request,response) => {
