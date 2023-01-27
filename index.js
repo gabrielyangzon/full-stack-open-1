@@ -1,7 +1,10 @@
+require('dotenv').config()
 const express = require("express")
 const morgan = require("morgan")
 const cors = require('cors')
+const mongoose = require('mongoose')
 
+const Person = require("./models/person")
 
 const app = express()
 
@@ -11,7 +14,7 @@ app.use(cors())
 
 
 
-morgan.token('body', (req, res) => JSON.stringify(req.body));
+morgan.token('body', (req, res) => `request ${JSON.stringify(req.body)}`);
 app.use(morgan(':method :url :status :response-time ms - :body'));
 
 
@@ -49,23 +52,39 @@ app.get('/',(request,response) => {
 /// get all persons
 app.get(`${url}/persons`,(request,response) => {
 
-    response.json(personsData)
+    ///nodb
+    //response.json(personsData)
+
+    ///mongodb
+    Person.find({}).then((result) => {     
+        response.json(result)       
+    })   
 })
 
 
 /// get person by id
 app.get(`${url}/persons/:id`,(request,response) => {
 
-        let id = Number(request.params.id)
+        ///nodb
+        //let id = Number(request.params.id)
+        //let person = personsData.find(p => p.id === id)
 
-        let person = personsData.find(p => p.id === id)
+        // if(person){
+        //     response.json(person)
+        // }
+        // else{
+        //     response.status(404).end("User not found")
+        // }
 
-        if(person){
-            response.json(person)
-        }
-        else{
-            response.status(404).end("User not found")
-        }
+        ///mongodb
+        Person.findById(request.params.id).then((result) => {               
+            if(result){
+                response.json(result)
+            }
+            else{
+                response.status(404).json("User not found")
+            }
+        })   
 })
 
 
@@ -75,56 +94,85 @@ app.post(`${url}/persons`,(request,response) => {
 
     let {id , name , number } = body
 
+    ///nodb
+    // let existing = personsData.filter(c => c.name.toLowerCase() === name.toLowerCase()).length
 
-    let existing = personsData.filter(c => c.name.toLowerCase() === name.toLowerCase()).length
+    // if(isNullOrEmpty(name) ||isNullOrEmpty(number)){
+    //     return response.status(409).json({error: "The name or number is missing"})
+    // }
+    // else if(existing !== 0){
+    //     return response.status(409).json({error: "The name already exists in the phonebook"})
+    // }
+    // else {
 
-    if(isNullOrEmpty(name) ||isNullOrEmpty(number)){
-        return response.status(409).json({error: "The name or number is missing"})
-    }
-    else if(existing !== 0){
-        return response.status(409).json({error: "The name already exists in the phonebook"})
-    }
-    else {
+    //     let newPersonId = isNullOrEmpty(id) || id === 0 ? 
+    //        Math.floor(Math.random() * Date.now()) : id
 
-        let newPersonId = isNullOrEmpty(id) || id === 0 ? 
-           Math.floor(Math.random() * Date.now()) : id
+    //     let newPerson = {
+    //             ...body , 
+    //             id:  newPersonId
+    //     }
 
-        let newPerson = {
-                ...body , 
-                id:  newPersonId
+    //     personsData = personsData.concat(newPerson)
+    //     return response.json(personsData)
+
+    // }
+
+
+
+    ///mongodb
+    const person = new Person({
+        name : name,
+        number : number
+    })
+
+    person.save().then(result => {
+        console.log(result)
+        if(result){
+            response.status(200).send(`User created ${result}`)
+        }else{
+            response.status(401).send("something wrong happened")
         }
-
-        personsData = personsData.concat(newPerson)
-        return response.json(personsData)
-
-    }
+    })
+    
 })
 
 
 /// delete person by id
 app.delete(`${url}/persons/:id`,(request,response) => {
 
-       let id = Number(request.params.id)
+        ///nodb
+        // let id = Number(request.params.id)
 
-        let person = personsData.find(p => p.id === id)
+        // let person = personsData.find(p => p.id === id)
 
-        if(person){
+        // if(person){
 
-           let updatedPersonsData = personsData.filter(p => p.id !== id)
+        //    let updatedPersonsData = personsData.filter(p => p.id !== id)
 
-            personsData = updatedPersonsData
+        //     personsData = updatedPersonsData
 
-            response.send(`${person.name} deleted`)
-        }
-        else{
-            response.status(404).end("User not found")
-        }
+        //     response.send(`${person.name} deleted`)
+        // }
+        // else{
+        //     response.status(404).end("User not found")
+        // }
 
+        ///mongodb
+        Person.findByIdAndDelete(request.params.id).then((result) => {
+            console.log(result)
+            if(result){
+                response.status(200).send(`User deleted ${result.name}`)
+            }
+            else{
+                response.status(400).send('Error while deleting user')
+            }
+        })
 })
 
 
 /// update person
-app.put(`${url}/persons/:id`, (request,response)=>{
+app.put(`${url}/persons/:id`, (request,response)=> {
          let body = request.body
 
         let {id , name , number } = body
@@ -147,8 +195,19 @@ app.put(`${url}/persons/:id`, (request,response)=>{
 
 
 app.get('/info',(request,response) => {
-    response.send(`<p>Phonebook has info for ${personsData.length} people</p> 
-                   <p>${Date().toLocaleString()}</p>`)
+    ///no db
+    // response.send(`<p>Phonebook has info for ${personsData.length} people</p> 
+    //                <p>${Date().toLocaleString()}</p>`)
+
+    ///mongodb
+    Person.find({}).then((result) => {
+        if(result){
+            response.send(`<p>Phonebook has info for ${result.length} people</p> 
+                    <p>${Date().toLocaleString()}</p>`)
+        }else{
+            response.status(404).send("Users not found")
+        }
+    })
 })
 
 
