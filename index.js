@@ -8,16 +8,36 @@ const Person = require("./models/person")
 
 const app = express()
 
+const unknownEndpoint = (request,response) => {
+    response.status(400).send({error : "Unknown endpoint"})
+}
+
+
+
+const erroHandler = (error,request ,response,next ) => {
+
+     console.log(error.name)
+
+    if(error.name === "CastError"){
+        response.status(400).end({error : "something wrong with id"})
+    }else{
+        response.status(400).end({error : error.message})
+    }
+}
+
+
+
+
 app.use(express.static('build'))
 app.use(express.json())
 app.use(cors())
-
-
-
 morgan.token('body', (req, res) => `request ${JSON.stringify(req.body)}`);
 app.use(morgan(':method :url :status :response-time ms - :body'));
 
 
+
+
+///
 
 let url = "/api"
 
@@ -63,7 +83,7 @@ app.get(`${url}/persons`,(request,response) => {
 
 
 /// get person by id
-app.get(`${url}/persons/:id`,(request,response) => {
+app.get(`${url}/persons/:id`,(request,response,next) => {
 
         ///nodb
         //let id = Number(request.params.id)
@@ -77,14 +97,16 @@ app.get(`${url}/persons/:id`,(request,response) => {
         // }
 
         ///mongodb
-        Person.findById(request.params.id).then((result) => {               
-            if(result){
-                response.json(result)
-            }
-            else{
-                response.status(404).json("User not found")
-            }
-        })   
+        Person.findById(request.params.id)
+            .then((result) => {               
+                if(result){
+                    response.json(result)
+                }
+                else{
+                    response.status(404).json("User not found")
+                }
+            })
+            .catch(error => next(error))   
 })
 
 
@@ -117,8 +139,6 @@ app.post(`${url}/persons`,(request,response) => {
     //     return response.json(personsData)
 
     // }
-
-
 
     ///mongodb
     const person = new Person({
@@ -172,25 +192,39 @@ app.delete(`${url}/persons/:id`,(request,response) => {
 
 
 /// update person
-app.put(`${url}/persons/:id`, (request,response)=> {
+app.put(`${url}/persons/:id`, (request,response , next)=> {
          let body = request.body
 
         let {id , name , number } = body
 
-        let person = personsData.find(p => p.id === id)
+        ///nodb
+        // let person = personsData.find(p => p.id === id)
 
-        if(person){
+        // if(person){
 
-            let updatedPersonsData = personsData.map(p => p.id === id ? {id: id, name : name , number} : p)
+        //     let updatedPersonsData = personsData.map(p => p.id === id ? {id: id, name : name , number} : p)
 
-            console.log(updatedPersonsData)
-            personsData = updatedPersonsData
+        //     console.log(updatedPersonsData)
+        //     personsData = updatedPersonsData
 
-            response.send(`${person.name} updated`)
-        }
-        else{
-            response.status(404).end("User not found")
-        }
+        //     response.send(`${person.name} updated`)
+        // }
+        // else{
+        //     response.status(404).end("User not found")
+        // }
+
+         const updatedPerson = {
+            name: name ,
+            number: number 
+         }   
+
+        ///mongodb
+        Person.findByIdAndUpdate(id , updatedPerson , {new : true})
+        .then(result => {
+            console.log(result)
+            response.status(200).send({message : result})
+        })
+        .catch(error => next(error))
 })
 
 
@@ -211,12 +245,15 @@ app.get('/info',(request,response) => {
 })
 
 
+app.use(unknownEndpoint)
+app.use(erroHandler)
+
 
 const port = process.env.PORT || 3001
-
 app.listen(port, ()=> {
     console.log(`app listening in ${port}`)
 })
+
 
 
 function isNullOrEmpty(value) {
