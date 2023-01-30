@@ -13,7 +13,7 @@ const unknownEndpoint = (request,response) => {
 }
 
 
-const erroHandler = (error,request ,response,next ) => {
+const errorHandler = (error,request ,response,next ) => {
 
      console.log(error.name)
 
@@ -26,7 +26,7 @@ const erroHandler = (error,request ,response,next ) => {
         response.status(400).end({error : error.message})
     }
 
-    next(error)
+    //next(error)
 }
 
 
@@ -226,7 +226,7 @@ app.put(`${url}/persons/:id`, (request,response , next)=> {
         Person.findByIdAndUpdate(id , updatedPerson , 
         {new : true , runValidators : true , context : "query"})
         .then(result => {
-            console.log(result)
+            //console.log(result)
             response.status(200).send({message : result})
         })
         .catch(error => next(error))
@@ -251,7 +251,7 @@ app.get('/info',(request,response) => {
 
 
 app.use(unknownEndpoint)
-app.use(erroHandler)
+app.use(errorHandler)
 
 
 const port = process.env.PORT || 3001
