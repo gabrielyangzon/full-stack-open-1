@@ -2,13 +2,14 @@ const mongoose = require('mongoose')
 
 require('dotenv').config()
 
+// eslint-disable-next-line no-undef
 const url = process.env.MONGO_URL
 
 mongoose.set('strictQuery',false)
 
 mongoose.connect(url)
-.then(()=> console.log('connected to mongodb'))
-.catch(err => console.log(`error connecting to mongodb ${err.message}`));
+  .then(() => console.log('connected to mongodb'))
+  .catch(err => console.log(`error connecting to mongodb ${err.message}`))
 
 const personSchema = new mongoose.Schema({
   name: {
@@ -20,12 +21,11 @@ const personSchema = new mongoose.Schema({
     type : String,
     validate : {
       validator : function(v){
-          
-          let isValid = /\d{3}-\d{8}/.test(v) || /\d{2}-\d{7}/.test(v)
+        let isValid = /\d{3}-\d{8}/.test(v) || /\d{2}-\d{7}/.test(v)
 
-          return isValid ;
+        return isValid
       },
-      message : props => `valid numbers example are : 09-1234556 and 040-22334455`
+      message : () => 'valid numbers example are : 09-1234556 and 040-22334455'
     },
     required: [true , 'User phone number required']
   },
@@ -39,7 +39,7 @@ personSchema.set('toJSON', {
   }
 })
 
-module.exports = mongoose.model("PersonsData" , personSchema)
+module.exports = mongoose.model('PersonsData' , personSchema)
 
 
 
