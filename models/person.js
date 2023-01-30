@@ -1,9 +1,7 @@
 const mongoose = require('mongoose')
+const config = require('../utils/config')
 
-require('dotenv').config()
-///
-// eslint-disable-next-line no-undef
-const url = process.env.MONGO_URL
+const url = config.MONGO_URL
 
 mongoose.set('strictQuery',false)
 

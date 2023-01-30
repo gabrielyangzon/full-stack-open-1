@@ -3,6 +3,8 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 
+const config = require('./utils/config')
+const logger = require('./utils/logger')
 
 const Person = require('./models/person')
 
@@ -173,8 +175,6 @@ app.use(unknownEndpoint)
 app.use(errorHandler)
 
 
-// eslint-disable-next-line no-undef
-const port = process.env.PORT || 3001
-app.listen(port, () => {
-  console.log(`app listening in ${port}`)
+app.listen(config.PORT, () => {
+  logger.info(`app listening in ${config.PORT}`)
 })
